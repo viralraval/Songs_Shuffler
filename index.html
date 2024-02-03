@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vibrant Jukebox</title>
+  <link href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css" rel="stylesheet">
+  <style>
+    .search-bar {
+      padding: 8px;
+      margin-bottom: 10px;
+      border: 1px solid #444; /* Ubuntu dark border color */
+      border-radius: 8px;
+      background: #333; /* Ubuntu dark background color */
+      color: white;
+    }
+
+    #jukebox-container {
+      background-color: #2c2c2c; /* Ubuntu dark background color */
+      color: white;
+    }
+
+    th, td {
+      border: 1px solid #444; 
+      /* Ubuntu dark border color */
+    }
+
+    td{
+      background: #333333;
+    }
+
+    #genreDropdown, #audio {
+      background-color: #333; /* Ubuntu dark background color */
+      color: white;
+    }
+
+    #genreDropdown {
+      border: 1px solid #444; /* Ubuntu dark border color */
+    }
+
+    #genreDropdown option {
+      background-color: #333; /* Ubuntu dark background color */
+      color: white;
+    }
+    button{
+background: #772953
+    }
+    button:hover{
+      background: #2C001E;
+    }
+  </style>
+</head>
+
+<body class="text-white font-sans p-10" style="background: #2C001E">
+
+  <div id="jukebox-container" class="container mx-auto rounded-lg p-8">
+    <h1 class="text-4xl font-bold mb-4" style="color: #E95420">JukeBox</h1>
+
+    <!-- Search bar -->
+    <input type="text" id="searchBar" class="search-bar w-full" placeholder="Search for a song...">
+
+    <p id="selectedValueDisplay" class="text-lg mb-4">Now Playing: <span id="selectedValue" class="text-yellow-300"></span></p>
+    <div class="flex items-center justify-center mb-4">
+      <audio controls id="audio" class="w-full max-w-xl">
+        <source type="audio/mp3" id="audio-source">
+      </audio>
+    </div>
+    <div class="flex justify-center space-x-4">
+      <button onclick="playPrev()" class="text-white px-4 py-2 rounded" >Prev Song</button>
+      <button onclick="playNext()" class="text-white px-4 py-2 rounded" >Next Song</button>
+    </div>
+
+    <!-- Genre dropdown menu -->
+    <div class="mt-4">
+      <label for="genreDropdown" class="text-lg text-yellow-300">Select Genre:</label>
+      <select id="genreDropdown" class="ml-2 p-2 border rounded border-gray-600 bg-gray-800">
+        <option value="all" class="text-white">All Genres</option>
+        <!-- Add options for each unique genre in the songs array -->
+        <!-- This assumes each song has a 'genre' property -->
+      </select>
+    </div>
+
+    <table class="table-fixed mt-8 w-full">
+      <thead>
+        <tr>
+          <th class="border p-2 text-left text-yellow-300">URL</th>
+          <th class="border p-2 text-left text-yellow-300">Genre</th>
+        </tr>
+      </thead>
+      <tbody id="songTableBody">
+        <!-- Table body will be populated dynamically using JavaScript -->
+      </tbody>
+    </table>
+  </div>
+
+  <script>
+    const audio = document.getElementById('audio');
+    const audioSource = document.getElementById('audio-source');
+    const searchBar = document.getElementById('searchBar');
+    const songs = [
+      { url: 'sajda.mp3', genre: 'Bollywood' },
+      { url: 'mix.mp3', genre: 'Mix' },
+      // Add more song objects with URLs and genres as needed
+    ];
+    let currentSongIndex = 0;
+    var textElement = document.getElementById("selectedValue");
+    const genreDropdown = document.getElementById('genreDropdown');
+    const tableBody = document.getElementById('songTableBody');
+
+    function playNext() {
+      currentSongIndex = (currentSongIndex + 1) % songs.length;
+      playCurrentSong();
+    }
+
+    function playPrev() {
+      currentSongIndex = (currentSongIndex - 1 + songs.length) % songs.length;
+      playCurrentSong();
+    }
+
+    function playCurrentSong() {
+      audioSource.src = songs[currentSongIndex].url;
+      textElement.innerHTML = songs[currentSongIndex].url; // Update genre
+      audio.load();
+      audio.play();
+    }
+
+    function updateGenreDropdown() {
+      // Get unique genres from songs
+      const uniqueGenres = [...new Set(songs.map(song => song.genre))];
+
+      // Populate dropdown options
+      genreDropdown.innerHTML = '<option value="all" class="text-white">All Genres</option>';
+      uniqueGenres.forEach(genre => {
+        genreDropdown.innerHTML += `<option value="${genre}" class="text-white">${genre}</option>`;
+      });
+    }
+
+    function filterSongsByGenre() {
+      const selectedGenre = genreDropdown.value;
+
+      // Clear table body
+      tableBody.innerHTML = '';
+
+      // Filter songs based on the selected genre
+      const filteredSongs = (selectedGenre === 'all') ? songs : songs.filter(song => song.genre === selectedGenre);
+
+      // Populate the table with filtered songs
+      filteredSongs.forEach((song, index) => {
+        const row = tableBody.insertRow();
+        const cell1 = row.insertCell(0);
+        const cell2 = row.insertCell(1);
+
+        cell1.textContent = song.url;
+        cell2.textContent = song.genre;
+
+        // Add a click event listener to each cell
+        cell1.addEventListener('click', () => cellClickHandler(song.url));
+        cell2.addEventListener('click', () => cellClickHandler(song.genre));
+
+        // Add formatting to table rows
+        row.classList.add(index % 2 === 0 ? 'bg-gray-800' : 'bg-gray-900', 'hover:bg-gray-700');
+
+        // Add cell padding
+        cell1.classList.add('p-2');
+        cell2.classList.add('p-2');
+        // Add border and border-radius
+        cell1.classList.add('border', 'rounded', 'border-gray-600');
+        cell2.classList.add('border', 'rounded', 'border-gray-600');
+      });
+    }
+
+    // Function to handle cell click
+    function cellClickHandler(value) {
+      audioSource.src = value;
+      textElement.innerHTML = value; // Update genre
+      audio.load();
+      audio.play();
+      // You can perform any other actions with the selected value here
+    }
+
+    // Function to filter songs based on search input
+    function filterSongsBySearch() {
+      const searchInput = searchBar.value.toLowerCase();
+      const filteredSongs = songs.filter(song => song.url.toLowerCase().includes(searchInput) || song.genre.toLowerCase().includes(searchInput));
+      updateTable(filteredSongs);
+    }
+
+    // Function to update the table with given songs
+    function updateTable(filteredSongs) {
+      tableBody.innerHTML = '';
+
+      filteredSongs.forEach((song, index) => {
+        const row = tableBody.insertRow();
+        const cell1 = row.insertCell(0);
+        const cell2 = row.insertCell(1);
+
+        cell1.textContent = song.url;
+        cell2.textContent = song.genre;
+
+        // Add a click event listener to each cell
+        cell1.addEventListener('click', () => cellClickHandler(song.url));
+        cell2.addEventListener('click', () => cellClickHandler(song.genre));
+
+        // Add formatting to table rows
+        row.classList.add(index % 2 === 0 ? 'bg-gray-800' : 'bg-gray-900', 'hover:bg-gray-700');
+
+        // Add cell padding
+        cell1.classList.add('p-2');
+        cell2.classList.add('p-2');
+        // Add border and border-radius
+        cell1.classList.add('border', 'border-gray-600');
+        cell2.classList.add('border', 'border-gray-600');
+      });
+    }
+
+    // Initial load of the first song
+    updateGenreDropdown();
+    playCurrentSong();
+
+    audio.addEventListener('ended', playNext);
+    genreDropdown.addEventListener('change', filterSongsByGenre);
+    searchBar.addEventListener('input', filterSongsBySearch);
+  </script>
+
+</body>
+
+</html>
